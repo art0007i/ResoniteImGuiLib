@@ -1,12 +1,11 @@
 # ResoniteImGuiLib
+[![Thunderstore Badge](https://modding.resonite.net/assets/available-on-thunderstore.svg)](https://thunderstore.io/c/resonite/)
 
-A [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoader) mod for [Resonite](https://resonite.com/) that is a library which allows modders to use [ImGuiUnityInject](https://github.com/art0007i/ImGuiUnityInject) in resonite.
+A [Resonite](https://resonite.com/) library that allows modders to create ImGui windows.
 
-Example usage can be found here: https://github.com/art0007i/ImGuiExample
-
-## Installation
-1. Install [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoader).
-1. Place [ResoniteImGuiLib.dll](https://github.com/art0007i/ResoniteImGuiLib/releases/latest/download/ResoniteImGuiLib.dll) into your `rml_mods` folder. This folder should be at `C:\Program Files (x86)\Steam\steamapps\common\Resonite\rml_mods` for a default install. You can create it if it's missing, or if you launch the game once with ResoniteModLoader installed it will create the folder for you.
-2. Place [ImGuiUnityInject.dll](https://github.com/art0007i/ImGuiUnityInject/releases/latest/download/ImGuiUnityInject.dll) into your `rml_libs` folder.
-3. Place the `cimgui.dll` file from [ImGuiUnityInject/Plugins](https://github.com/art0007i/ImGuiUnityInject/tree/master/Plugins) into your `Resonite_Data/Plugins/x86_64` folder.
-1. Start the game. If you want to verify that the mod is working you can check your Resonite logs.
+## Installation (Manual)
+1. Install [BepisLoader](https://github.com/ResoniteModding/BepisLoader) for Resonite.
+2. Download the latest release ZIP file (e.g., `art0007i-ResoniteImGuiLib-2.0.0.zip`) from the [Releases](https://github.com/art0007i/ResoniteImGuiLib/releases) page.
+3. Extract the ZIP and copy the `plugins` folder to your BepInEx folder in your Resonite installation directory:
+   - **Default location:** `C:\Program Files (x86)\Steam\steamapps\common\Resonite\BepInEx\`
+4. Start the game. If you want to verify that the mod is working you can check your BepInEx logs.

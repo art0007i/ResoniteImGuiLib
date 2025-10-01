@@ -1,0 +1,55 @@
+# This file is used by the Thunderstore CLI to build and publish your mod to Thunderstore. https://github.com/thunderstore-io/thunderstore-cli
+
+[config]
+schemaVersion = "0.0.1"
+
+[package]
+namespace = "art0007i"
+name = "ResoniteImGuiLib"
+description = "Library that allows modders to create ImGui windows."
+websiteUrl = "https://github.com/art0007i/ResoniteImGuiLib"
+containsNsfwContent = false
+
+[package.dependencies] 
+ResoniteModding-BepisLoader = "1.4.1"
+ResoniteModding-BepisResoniteWrapper = "1.0.0"
+
+[build]
+icon = "./icon.png"
+readme = "./README.md"
+outdir = "./build"
+
+[[build.copy]]
+source = "./Plugin/bin/Release/ResoniteImGuiLib.dll"
+target = "plugins/ResoniteImGuiLib/"
+
+[[build.copy]]
+source = "./Plugin/bin/Release/ResoniteImGuiLib.pdb"
+target = "plugins/ResoniteImGuiLib/"
+
+[[build.copy]]
+source = "./Plugin/bin/Release/ImGui.NET.dll"
+target = "plugins/ResoniteImGuiLib/"
+
+[[build.copy]]
+source = "./Plugin/bin/Release/runtimes/linux-x64/native/libcimgui.so"
+target = "plugins/ResoniteImGuiLib/native/"
+
+[[build.copy]]
+source = "./Plugin/bin/Release/runtimes/win-x64/native/cimgui.dll"
+target = "plugins/ResoniteImGuiLib/native/"
+
+[[build.copy]]
+source = "./CHANGELOG.md"
+target = "/"
+
+[[build.copy]]
+source = "./LICENSE"
+target = "/"
+
+[publish]
+repository = "https://thunderstore.io"
+communities = ["resonite"]
+
+[publish.categories]
+resonite = [ "libraries", "technicaltweaks" ] # TODO: Change this to your mod's categories, see https://thunderstore.io/api/experimental/community/resonite/category/ for a list of available categories

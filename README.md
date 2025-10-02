@@ -3,6 +3,8 @@
 
 A [Resonite](https://resonite.com/) library that allows modders to create ImGui windows.
 
+Example usage can be found here: https://github.com/art0007i/ImGuiExample
+
 ## Installation (Manual)
 1. Install [BepisLoader](https://github.com/ResoniteModding/BepisLoader) for Resonite.
 2. Download the latest release ZIP file (e.g., `art0007i-ResoniteImGuiLib-2.0.0.zip`) from the [Releases](https://github.com/art0007i/ResoniteImGuiLib/releases) page.

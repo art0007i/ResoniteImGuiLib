@@ -1,5 +1,4 @@
-﻿using CodeGenerationConfig;
-using Elements.Core;
+﻿using Elements.Core;
 using ImGuiNET;
 using SDL3;
 using System.Diagnostics;
@@ -12,12 +11,14 @@ public class SDL3Window : IDisposable
     public readonly IntPtr Device;
     public readonly ImGuiSDL3 Platform;
     public readonly ImGuiSDL3Renderer Renderer;
+    public readonly uint SdlWindowId;
     internal readonly Queue<SDL.Event> EventQueue = new();
+    internal Action? RenderCallback { get; set; }
+    internal Func<SDL.Event, bool>? SdlEventReceived { get; set; }
     public event Action<int4>? WindowRectModified;
 
     public color? ClearColor = null;
 
-    public Action? RenderCallback { get; set; }
 
     private readonly Stopwatch _timer = Stopwatch.StartNew();
     private TimeSpan _time = TimeSpan.Zero;
@@ -57,9 +58,11 @@ public class SDL3Window : IDisposable
         Platform = new ImGuiSDL3(Window, Device);
         Renderer = new ImGuiSDL3Renderer(Device);
 
+        SdlWindowId = SDL.GetWindowID(Window);
         //ImGuiManager.TriggerImGuiRecreated();
     }
 
+    public bool Disposed => _disposed;
     private bool _disposed;
 
     ~SDL3Window()
@@ -68,6 +71,11 @@ public class SDL3Window : IDisposable
     }
 
     public void Dispose()
+    {
+        Dispose(false);
+    }
+
+    public void ForceDispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
@@ -102,8 +110,8 @@ public class SDL3Window : IDisposable
 
         if (_imGuiContext != IntPtr.Zero)
         {
-            ImGui.SetCurrentContext(_imGuiContext);
-            ImGui.DestroyContext();
+            ImGui.SetCurrentContext(IntPtr.Zero);
+            ImGui.DestroyContext(_imGuiContext);
             _imGuiContext = IntPtr.Zero;
         }
 
@@ -118,11 +126,14 @@ public class SDL3Window : IDisposable
         }
     }
 
+    public void SetContext()
+    {
+        ImGui.SetCurrentContext(_imGuiContext);
+    }
+
     public void RunOneFrame()
     {
         if (_disposed) return;
-
-        ImGui.SetCurrentContext(_imGuiContext);
 
         ImGui.GetIO().DeltaTime = (float) (_timer.Elapsed - _time).TotalSeconds;
         _time = _timer.Elapsed;
@@ -136,14 +147,10 @@ public class SDL3Window : IDisposable
 
         Render();
 
-        if (_shouldClose || Plugin.CancellationToken.IsCancellationRequested)
-        {
-            Dispose();
-        }
         ImGui.SetCurrentContext(IntPtr.Zero);
     }
 
-    private bool _shouldClose;
+    public bool ShouldClose;
 
     private void PollEvents()
     {
@@ -154,6 +161,17 @@ public class SDL3Window : IDisposable
 
         while (EventQueue.TryDequeue(out var ev))
         {
+            var skip = false;
+            foreach (var func in Delegate.EnumerateInvocationList(SdlEventReceived))
+            {
+                if (!func(ev))
+                {
+                    skip = true;
+                    break;
+                }
+            }
+            if (skip) continue;
+
             Platform.ProcessEvent(ev);
 
             switch ((SDL.EventType) ev.Type)
@@ -168,7 +186,7 @@ public class SDL3Window : IDisposable
                 case SDL.EventType.Terminating:
                 case SDL.EventType.WindowCloseRequested:
                 case SDL.EventType.Quit:
-                    _shouldClose = true;
+                    ShouldClose = true;
                     break;
                 case SDL.EventType.WindowResized:
                     SetupScreenClipRect();

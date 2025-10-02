@@ -15,7 +15,14 @@ public class ImGuiInstance
     }
 
     public string Name => _name;
+    /// <summary>
+    /// Called whenever ImGui is being rendered. You can use ImGui functions inside here.
+    /// </summary>
     public event Action? Layout;
+    /// <summary>
+    /// Called whenever the window is processing an event. Returning false means that the event will not be processed further.
+    /// </summary>
+    public event Func<SDL.Event, bool>? SdlEvent;
 
     private string _name;
     private ConfigEntry<int4> _entry;
@@ -25,6 +32,14 @@ public class ImGuiInstance
     private static Dictionary<string, ImGuiInstance> GuiInstances = new();
     internal static ConcurrentQueue<ImGuiInstance> newInstances = new();
     internal static ConcurrentQueue<(string, Action<SDL3Window>)> windowRequests = new();
+
+    /// <summary>
+    /// Tries to open the window. If it's already open, nothing happens. This function may be expensive to call rapidly.
+    /// </summary>
+    public void OpenWindow()
+    {
+        newInstances.Enqueue(this);
+    }
 
     /// <summary>
     /// Gets a reference to the SDL3Window inside of a callback.
@@ -74,7 +89,7 @@ public class ImGuiInstance
         if (IsSDL3Running)
             return;
 
-        _sdl3Thread = new Thread(() => RunSDL3())
+        _sdl3Thread = new Thread(RunSDL3)
         {
             Name = $"Resonite ImGui SDL3",
             Priority = ThreadPriority.Highest,
@@ -93,16 +108,21 @@ public class ImGuiInstance
             {
                 while (newInstances.TryDequeue(out var request))
                 {
+                    if (windows.ContainsKey(request.Name)) continue;
+
                     SDL3Window app = new SDL3Window("ImGuiContext: " + request.Name, request._entry.Value.x, request._entry.Value.y, request._entry.Value.z, request._entry.Value.w);
                     app.WindowRectModified += (rect) => request._entry.Value = rect;
                     // TODO: maybe listen to config changes to resize window
                     // request._entry.SettingChanged += (_, _) => { };
-                    app.RenderCallback = request.Layout!;
-                    windows[request.Name] = app;
-                    var winId = SDL.GetWindowID(app.Window);
-                    if (!windowsById.TryAdd(winId, app))
+                    app.RenderCallback = request.Layout;
+                    app.SdlEventReceived = request.SdlEvent;
+                    if (!windows.TryAdd(request.Name, app))
                     {
-                        Plugin.Log.LogError($"Failed to add window with id {(uint) app.Window}, name {request.Name}!");
+                        Plugin.Log.LogError($"Failed to add window with name {request.Name}!");
+                    }
+                    if (!windowsById.TryAdd(app.SdlWindowId, app))
+                    {
+                        Plugin.Log.LogError($"Failed to add window with id {app.SdlWindowId}, name {request.Name}!");
                     }
                 }
                 for (int i = 0; i < windowRequests.Count; i++)
@@ -119,7 +139,6 @@ public class ImGuiInstance
                         }
                     }
                 }
-
                 while (SDL.PollEvent(out SDL.Event ev))
                 {
                     if (windowsById.TryGetValue(ev.Window.WindowID, out var window))
@@ -128,9 +147,46 @@ public class ImGuiInstance
                     }
                 }
 
+                var removed = new HashSet<(string, uint)>();
                 foreach (var (key, window) in windows)
                 {
+                    if(window.Disposed)
+                    {
+                        removed.Add((key, window.SdlWindowId));
+                        continue;
+                    }
+                    window.SetContext();
+
+                    if (Plugin.CancellationToken.IsCancellationRequested)
+                    {
+                        window.ForceDispose();
+                        continue;
+                    }
+
+                    if (window.ShouldClose)
+                    {
+                        removed.Add((key, window.SdlWindowId));
+                        window.Dispose();
+                        continue;
+                    }
+
                     window.RunOneFrame();
+                }
+                foreach (var (k, k2) in removed)
+                {
+                    var b = windows.Remove(k);
+                    var b2 = windowsById.Remove(k2);
+                    Plugin.Log.LogDebug($"Removed window {k}, success codes: {b}|{b2}");
+                }
+                if (Plugin.CancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                // Prevent busy looping when nothing is happening.
+                if (windows.Count == 0)
+                {
+                    Thread.Sleep(1000);
                 }
             }
         }

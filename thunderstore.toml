@@ -10,7 +10,7 @@ description = "Library that allows modders to create ImGui windows."
 websiteUrl = "https://github.com/art0007i/ResoniteImGuiLib"
 containsNsfwContent = false
 
-[package.dependencies] 
+[package.dependencies]
 ResoniteModding-BepisLoader = "1.4.1"
 ResoniteModding-BepisResoniteWrapper = "1.0.0"
 
@@ -33,11 +33,11 @@ target = "plugins/ResoniteImGuiLib/"
 
 [[build.copy]]
 source = "./Plugin/bin/Release/runtimes/linux-x64/native/libcimgui.so"
-target = "plugins/ResoniteImGuiLib/native/"
+target = "plugins/ResoniteImGuiLib/"
 
 [[build.copy]]
 source = "./Plugin/bin/Release/runtimes/win-x64/native/cimgui.dll"
-target = "plugins/ResoniteImGuiLib/native/"
+target = "plugins/ResoniteImGuiLib/"
 
 [[build.copy]]
 source = "./CHANGELOG.md"

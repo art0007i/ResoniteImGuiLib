@@ -194,7 +194,7 @@ public class SDL3Window : IDisposable
                     WindowRectModified?.Invoke(new(x, y, ev.Window.Data1, ev.Window.Data2));
                     break;
                 case SDL.EventType.WindowMoved:
-                    SDL.GetWindowSize(Window, out var h, out var w);
+                    SDL.GetWindowSize(Window, out var w, out var h);
                     WindowRectModified?.Invoke(new(ev.Window.Data1, ev.Window.Data2, w, h));
                     break;
             }
